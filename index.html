@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <script src="./world.js" async></script>
+
+</head>
+<style media="screen">
+  body {
+    width: 100vw;
+    height: 100vh;
+  }
+
+  canvas {
+    background-color: white;
+    border: 1px black solid;
+  }
+
+  .can {
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    padding: 10px;
+  }
+
+  .button-main {
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    padding: 10px;
+  }
+  input[type=number] {
+    min-width: 20px;
+    width: 50px;
+  }
+  input[type=button] {
+    display: inline-block;
+    width: auto;
+    padding: 5px
+  }
+  ul{
+    list-style: none;
+  }
+
+  ul > li:not(:last-child) {
+    margin-bottom: 10px;
+  }
+
+  .button-main p:not(:last-child) {
+    margin-right: 10px;
+
+  }
+
+</style>
+
+<body>
+  <div class="can">
+    <canvas id="canvas"></canvas>
+  </div>
+  <div class="button-main">
+    <label>
+      <input type="button" value="START" id="stopButton"></input>
+      <input type="button" value="RESET" id="resetButton"></input>
+    </label>
+    <ul>
+      <li>
+        <input type="radio" name="mode" value="WOLFRAM" onclick="reset()">
+            Wolfram
+            <input type="number" value="30" max="256" min="1" id="ruleSet" onchange="reset()"></input>
+        </input>
+      </li>
+      <li>
+          <input type="radio" name="mode" value="GAME_OF_LIVE"  onclick="reset()" checked> Game of Life </input>
+      </li>
+    </ul>
+
+  </div>
+    <div class="button-main">
+      <p>Width: <input type="number" value="400" max="256" min="1" id="width" onchange="reapply()"> </input></p>
+      <p> Height: <input type="number" value="400" max="256" min="1" id="height" onchange="reapply()">  </input></p>
+      <p> Refreshes/s: <input type="number" value="15" min="1" id="cycles" onchange="reapply()"> </input></p>
+      <p> Grid Size: <input type="number" value="50" min="1" id="grid-size" onchange="reset()"> </input></p>
+    </div>
+</body>
+
+</html>
