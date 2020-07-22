@@ -1,71 +1,53 @@
 "use strict";
-let WIDTH = 800;
-let HEIGHT = 800;
-let AMOUNT = 50;
-let OFFSET = .000008;
-let INTERVAL = 1000 / Math.pow(AMOUNT, .5);
 
-
-
-let CTX = null;
-let GRID = null
-let OTHERGRID = null;
-let WOLFRAM_RULE = 110;
-let GLOBAL_MODE = "WOLFRAM"
-
-
-
-function applySetting(){
-  let ctx = document.getElementById("canvas").getContext("2d");
-  WIDTH = widthSelector()
-  HEIGHT = heightSelector()
-  INTERVAL = 1000/ refreshesSelector()
-  AMOUNT = gridSelector()
-  ctx.canvas.width = WIDTH
-  ctx.canvas.height = HEIGHT
-  CTX = ctx
+function updateCanvasSize(){
+  resizeCanvas(getContext(), widthSelector(), heightSelector())
 }
 
+function getContext(){
+  return document.getElementById("canvas").getContext("2d");
+}
 
-function init() {
-  applySetting()
-  GRID = create2DGRID(AMOUNT)
-  OTHERGRID = create2DGRID(AMOUNT)
-  let mode = modeSelector()
-  let ruleSet = ruleSelector()
-
-  GLOBAL_MODE = mode
+function init(amount, mode, ruleSet) {
+  updateCanvasSize()
+  let grid = create2DGRID(amount)
+  let other  = create2DGRID(amount)
   switch (mode) {
     case "WOLFRAM":
-      fillGrid(singleItemInField(), GRID)
-      WOLFRAM_RULE = ruleSet
+      fillGrid(singleItemInField(grid), grid)
       break;
     case "GAME_OF_LIVE":
-      fillGrid(random(), GRID)
+      fillGrid(random(), grid)
       break;
   }
+  return [grid, other]
 }
 
 
-function reapply(){
+function resizeCanvas(ctx,x , y){
+  ctx.canvas.width = x
+  ctx.canvas.height = y
+}
+
+
+function apply(){
   let a = iID !== null
-  clearInterval(iID)
-  applySetting()
-  redraw()
+  myClearInterval()
+  resizeCanvas(getContext(), widthSelector(), heightSelector())
+  draw(getContext(), getGrid())
   if (a) {
-    iID = start()
+    setIntervalID(start(determineInterval()))
   }
 }
 
-
-function redraw() {
-  dropCanvas(CTX)
-  drawGrid(CTX, GRID)
+function draw(ctx, grid) {
+  dropCanvas(ctx)
+  drawGrid(ctx, grid, ctx.canvas.width, ctx.canvas.height)
 }
 
-function singleItemInField() {
+function singleItemInField(grid) {
   return (x, y) => {
-    let len = GRID.length - 1
+    let len = grid.length - 1
     let pos = (len - (len % 2)) / 2
     return (pos === x && (y === len))
   }
@@ -80,25 +62,16 @@ function random() {
 }
 
 function dropCanvas(ctx) {
-  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.stroke();
 }
 
-function drawGrid(ctx, grid) {
+function drawGrid(ctx, grid, width, height) {
   ctx.beginPath();
   ctx.strokeStyle = 'rgba(0,0,0,1)';
-  const resolutionX = WIDTH / grid.length;
-  const resolutionY = HEIGHT / grid.length;
+  const resolutionX = width / grid.length;
+  const resolutionY = height / grid.length;
   let drawOffset = 0;
-  /*
-  for (let i = resolutionX; i < WIDTH; i += resolutionX) {
-    ctx.moveTo(i, 0);
-    ctx.lineTo(i, HEIGHT);
-  }
-  for (let i = resolutionY; i < HEIGHT; i += resolutionY) {
-    ctx.moveTo(0, i);
-    ctx.lineTo(WIDTH, i);
-  }*/
 
   grid.forEach((column, x) => {
     column.forEach((element, y) => {
@@ -116,11 +89,14 @@ function drawGrid(ctx, grid) {
   ctx.closePath();
 }
 
-function create2DGRID(dimension) {
+function create2DGRID(dimensionX, dimensionY) {
+  if (!dimensionY) {
+    dimensionY = dimensionX
+  }
   let grid = []
-  for (let i = 0; i < dimension; i++) {
+  for (let i = 0; i < dimensionX; i++) {
     let tempGrid = []
-    for (let j = 0; j < dimension; j++) {
+    for (let j = 0; j < dimensionY; j++) {
       tempGrid.push(0)
     }
     grid.push(tempGrid)
@@ -129,41 +105,46 @@ function create2DGRID(dimension) {
 }
 
 function fillGrid(funct, grid) {
-  grid.forEach(
-    (column, x) => {
-      column.forEach(
-        (val, y) => {
-          if (funct(x, y)) {
-            grid[x][y] = 1
-          } else {
-            grid[x][y] = 0
-          }
-        }
-      )
-    }
-  )
+  grid.forEach((column, x) => {
+      column.forEach((val, y) => {
+            grid[x][y] = funct(x, y) ? 1 : 0
+          })
+    })
 }
 
-function update() {
-  switch (GLOBAL_MODE) {
+function updateOnMode(grid, other , mode, ruleset){
+  let newGrid, othernewGrid = null
+  switch (mode) {
     case "WOLFRAM":
-      wolfgang(WOLFRAM_RULE)
+      [newGrid, othernewGrid] = wolfgang(ruleset, grid, other)
+      setGrid(newGrid)
+      setOtherGrid(othernewGrid)
       break;
     case "GAME_OF_LIVE":
-      gameOfLive()
+      [newGrid, othernewGrid] = gameOfLive(grid, other)
+      setGrid(newGrid)
+      setOtherGrid(othernewGrid)
       break;
   }
-  redraw()
 }
 
-function reset() {
+function update(grid, other, mode, ruleset) {
+  updateOnMode(grid, other , mode, ruleset)
+  draw(getContext(), getGrid())
+}
+
+function reset(grid, other) {
   stop()
-  init()
-  redraw()
+  let x = init(...panelInfo())
+  setGrid(x[0])
+  setOtherGrid(x[1])
+
+  draw(getContext(), getGrid())
 }
 
-let gameOfLive = () => {
-  GRID.forEach((column, x) => {
+let gameOfLive = (grid, other) => {
+  let otherGrid = other
+  grid.forEach((column, x) => {
     column.forEach((val, y) => {
       let neighborValue = (posX, posY, grid) => {
         let sum = 0 - grid[posX][posY]
@@ -177,17 +158,12 @@ let gameOfLive = () => {
         }
         return sum
       }
-
-      let value = neighborValue(x, y, GRID)
-      OTHERGRID[x][y] = rules(val, value)
+      let value = neighborValue(x, y, grid)
+      otherGrid[x][y] = rules(val, value)
     })
   })
-  let temp = GRID
-  GRID = OTHERGRID
-  OTHERGRID = temp
+  return  [otherGrid, grid]
 }
-
-
 
 function rules(live, neighborValue) {
   let DIES = 0;
@@ -233,7 +209,7 @@ function ruleWolfram(rule, value) {
   const DIES = 0
   if (rule > 256 || rule < 0) {
     alert("BAD RULESET ", rule)
-    clearInterval(iID)
+    myClearInterval()
     return DIES
   }
   return toBinaryInt(rule)[value]
@@ -263,33 +239,32 @@ function toBinaryInt(val) {
   return out
 }
 
-let wolfgang = (rule) => {
-  for (let x = 0; x < GRID.length; x++) {
-    for (let y = 1; y < (GRID.length); y++) {
-      OTHERGRID[x][y - 1] = GRID[x][y]
+let wolfgang = (rule, grid, otherGrid) => {
+  let newGrid = otherGrid
+  for (let x = 0; x < grid.length; x++) {
+    for (let y = 1; y < (grid.length); y++) {
+      newGrid[x][y - 1] = grid[x][y]
     }
   }
-  const index = (a, b) => {
-    return (a + b + GRID.length) % GRID.length
+  const index = (a, b, grid) => {
+    return (a + b + grid.length) % grid.length
   }
-  for (let x = 0; x < GRID.length; x++) {
-    let y = GRID.length - 1
-    let left = GRID[index(x, -1)][y]
-    let mid = GRID[index(x, 0)][y]
-    let right = GRID[index(x, 1)][y]
+  for (let x = 0; x < grid.length; x++) {
+    let y = grid.length - 1
+    let left = grid[index(x, -1, grid)][y]
+    let mid = grid[index(x, 0, grid)][y]
+    let right = grid[index(x, 1, grid)][y]
     let sum = neighborWolfram(left, mid, right)
     let status = ruleWolfram(rule, sum)
-    OTHERGRID[x][y] = status
+    newGrid[x][y] = status
   }
-  let temp = GRID
-  GRID = OTHERGRID
-  OTHERGRID = temp
+  return [newGrid, grid]
 }
 
-function start() {
+function start(interval) {
   let id = setInterval(() => {
-    update()
-  }, INTERVAL);
+      update(getGrid(), getOGrid(), modeSelector(), ruleSelector())
+  }, interval);
   return id
 }
 
@@ -304,28 +279,61 @@ function stop() {
   }
 }
 
+let grid = null
+let other = null
 let iID = null
+
 let stopButton = document.getElementById("stopButton")
 stopButton.addEventListener("click", () => {
   switch (stopButton.value) {
     case "STOP":
       stopButton.value = "START"
-      clearInterval(iID)
-      iID = null
+      myClearInterval()
       break;
     case "START":
       stopButton.value = "STOP"
-      iID = start()
+      setIntervalID(start(determineInterval()))
     default:
-
   }
 })
+
 let resetButton = document.getElementById("resetButton")
 resetButton.addEventListener("click", () => {
-  reset()
+  reset(getGrid(), getOGrid())
 })
 
+function newSet() {
+  reset(getGrid(), getOGrid())
+}
 
+function setGrid(nGrid) {
+  grid = nGrid
+}
+function setOtherGrid(oGrid) {
+  other = oGrid
+}
+function setIntervalID(id) {
+  iID = id
+}
+function getGrid(){
+  return grid
+}
+function getOGrid(){
+  return other
+}
+
+function getIntervalID(){
+  return iID
+}
+function myClearInterval(){
+  clearInterval(getIntervalID())
+  iID = null
+}
+
+
+
+
+let determineInterval = () =>  {return 1000/refreshesSelector()}
 let fetchId = (id) => { return document.getElementById(id)}
 let fetchValue = (id) => { return fetchId(id).value}
 let ruleSelector = () => {return fetchValue("ruleSet")}
@@ -341,7 +349,7 @@ let modeSelector = () => {
     }
   }
 }
+let panelInfo = () => {return [gridSelector(), modeSelector(), ruleSelector()]}
 
-
-init()
-redraw()
+[grid, other] = init(...panelInfo())
+draw(getContext(), getGrid())
