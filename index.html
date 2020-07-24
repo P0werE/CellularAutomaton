@@ -39,8 +39,13 @@
     width: auto;
     padding: 5px
   }
-  ul{
+  ul {
+    justify-content: center;
     list-style: none;
+  }
+
+  a {
+    text-decoration: none;
   }
 
   ul > li:not(:last-child) {
@@ -49,12 +54,13 @@
 
   .button-main p:not(:last-child) {
     margin-right: 10px;
-
   }
 
 </style>
 
 <body>
+
+
   <div class="can">
     <canvas id="canvas"></canvas>
   </div>
@@ -77,10 +83,17 @@
 
   </div>
     <div class="button-main">
-      <p>Width: <input type="number" value="400"  min="1" id="width" onchange="apply()" step="10"> </input></p>
-      <p> Height: <input type="number" value="400"  min="1" id="height" onchange="apply()" step="10">  </input></p>
+      <p>Width: <input type="number" value="800"  min="1" id="width" onchange="apply()" step="10"> </input></p>
+      <p> Height: <input type="number" value="800"  min="1" id="height" onchange="apply()" step="10">  </input></p>
       <p> Refreshes/s: <input type="number" value="15" min="1" id="cycles" onchange="apply()"> </input></p>
-      <p> Grid Size: <input type="number" value="15" min="1" id="grid-size" onchange="newSet()"> </input></p>
+      <p> Grid Size: <input type="number" value="250" min="1" id="grid-size" onchange="newSet()"> </input></p>
+    </div>
+    <div class="button-main">
+        <p>
+          <a href="https://mathworld.wolfram.com/ElementaryCellularAutomaton.html">
+            wolfram rules
+          </a>
+        </p>
     </div>
 </body>
 

@@ -72,7 +72,6 @@ function drawGrid(ctx, grid, width, height) {
   const resolutionX = width / grid.length;
   const resolutionY = height / grid.length;
   let drawOffset = 0;
-
   grid.forEach((column, x) => {
     column.forEach((element, y) => {
       if (element) {
@@ -131,6 +130,7 @@ function updateOnMode(grid, other , mode, ruleset){
 function update(grid, other, mode, ruleset) {
   updateOnMode(grid, other , mode, ruleset)
   draw(getContext(), getGrid())
+  nextRound()
 }
 
 function reset(grid, other) {
@@ -138,8 +138,8 @@ function reset(grid, other) {
   let x = init(...panelInfo())
   setGrid(x[0])
   setOtherGrid(x[1])
-
   draw(getContext(), getGrid())
+  resetRound()
 }
 
 let gameOfLive = (grid, other) => {
@@ -215,16 +215,6 @@ function ruleWolfram(rule, value) {
   return toBinaryInt(rule)[value]
 }
 
-function toBinary(val) {
-  let out = ""
-  while (val > 0) {
-    out = (val % 2) + out
-    val -= val % 2
-    val /= 2
-  }
-  return out
-}
-
 function toBinaryInt(val) {
   let out = []
   while (val > 0) {
@@ -282,6 +272,8 @@ function stop() {
 let grid = null
 let other = null
 let iID = null
+let count = 0
+
 
 let stopButton = document.getElementById("stopButton")
 stopButton.addEventListener("click", () => {
@@ -330,8 +322,9 @@ function myClearInterval(){
   iID = null
 }
 
-
-
+function nextRound() {count++;}
+function getRound(){ return count}
+function resetRound(){ count=0}
 
 let determineInterval = () =>  {return 1000/refreshesSelector()}
 let fetchId = (id) => { return document.getElementById(id)}
