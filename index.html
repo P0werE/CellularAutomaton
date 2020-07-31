@@ -68,16 +68,20 @@
     <label>
       <input type="button" value="START" id="stopButton"></input>
       <input type="button" value="RESET" id="resetButton"></input>
+      <input type="button" value="NEXT" onclick="next()"></input>
     </label>
     <ul>
       <li>
-        <input type="radio" name="mode" value="WOLFRAM" onclick="newSet()">
+        <input id="cleancanvas" type="checkbox" name="Clean" value="1" /> Clean Canvas
+      </li>
+      <li>
+        <input type="radio" name="mode" value="WOLFRAM" onclick="reset()">
             Wolfram
-            <input type="number" value="30" max="256" min="1" id="ruleSet" onchange="newSet()"></input>
+            <input type="number" value="30" max="256" min="1" id="ruleSet" onchange="reset()"></input>
         </input>
       </li>
       <li>
-          <input type="radio" name="mode" value="GAME_OF_LIVE"  onclick="newSet()" checked> Game of Life </input>
+          <input type="radio" name="mode" value="GAME_OF_LIVE"  onclick="reset()" checked> Game of Life </input>
       </li>
     </ul>
 
@@ -86,7 +90,7 @@
       <p>Width: <input type="number" value="800"  min="1" id="width" onchange="apply()" step="10"> </input></p>
       <p> Height: <input type="number" value="800"  min="1" id="height" onchange="apply()" step="10">  </input></p>
       <p> Refreshes/s: <input type="number" value="15" min="1" id="cycles" onchange="apply()"> </input></p>
-      <p> Grid Size: <input type="number" value="250" min="1" id="grid-size" onchange="newSet()"> </input></p>
+      <p> Grid Size: <input type="number" value="150" min="1" id="grid-size" onchange="reset()"> </input></p>
     </div>
     <div class="button-main">
         <p>
